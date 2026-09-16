@@ -1,0 +1,40 @@
+name: Analyse quotidienne Buffett
+
+on:
+  schedule:
+    # 06:00 UTC = 08:00 heure de Paris en hiver, 07:00 UTC = 08:00 en été (CEST).
+    # GitHub Actions ne gère pas le changement d'heure automatiquement :
+    # ce cron vise 8h en hiver. Ajuste à "0 5 * * *" si tu veux 8h précises
+    # en été (mars à octobre). Simplification possible plus tard.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}   # permet aussi de lancer le script manuellement depuis GitHub
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Mettre à jour l'univers d'entreprises (1 fois par semaine)
+        run: python fetch_universe.py
+
+      - name: Lancer l'analyse du jour
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: python analyze.py
+
+      - name: Envoyer la notification Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python notify.py
