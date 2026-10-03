@@ -2,12 +2,8 @@ name: Analyse quotidienne Buffett
 
 on:
   schedule:
-    # 06:00 UTC = 08:00 heure de Paris en hiver, 07:00 UTC = 08:00 en été (CEST).
-    # GitHub Actions ne gère pas le changement d'heure automatiquement :
-    # ce cron vise 8h en hiver. Ajuste à "0 5 * * *" si tu veux 8h précises
-    # en été (mars à octobre). Simplification possible plus tard.
     - cron: "0 6 * * *"
-  workflow_dispatch: {}   # permet aussi de lancer le script manuellement depuis GitHub
+  workflow_dispatch: {}
 
 jobs:
   analyse:
@@ -33,8 +29,7 @@ jobs:
           GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
         run: python analyze.py
 
-      - name: Envoyer la notification Telegram
+      - name: Envoyer la notification ntfy
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python notify.py
